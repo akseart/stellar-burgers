@@ -1,24 +1,50 @@
-import { FC, useMemo } from 'react';
+import { FC, useEffect, useMemo } from 'react';
 import { TConstructorIngredient } from '@utils-types';
 import { BurgerConstructorUI } from '@ui';
+import { useDispatch, useSelector } from '../../services/store';
+import {
+  clearConstructor,
+  selectBurgerConstructorState
+} from '../../services/burger-constructor/slice';
+import {
+  clearOrderModal,
+  selectOrderModalData,
+  selectOrderRequest
+} from '../../services/create-order/slice';
+import { selectUserProfile } from '../../services/profile-user/slice';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { createOrderThunk } from '../../services/create-order/actions';
 
 export const BurgerConstructor: FC = () => {
-  /** TODO: взять переменные constructorItems, orderRequest и orderModalData из стора */
-  const constructorItems = {
-    bun: {
-      price: 0
-    },
-    ingredients: []
-  };
+  const constructorItems = useSelector(selectBurgerConstructorState);
 
-  const orderRequest = false;
+  const orderRequest = useSelector(selectOrderRequest);
 
-  const orderModalData = null;
+  const orderModalData = useSelector(selectOrderModalData);
+  const user = useSelector(selectUserProfile);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const dispatch = useDispatch();
 
   const onOrderClick = () => {
-    if (!constructorItems.bun || orderRequest) return;
+    if (orderRequest) return;
+    if (!constructorItems.bun) return;
+    if (!user) {
+      navigate('/login', { replace: true, state: { from: location } });
+      return;
+    }
+    const orderItems = [
+      constructorItems.bun._id,
+      ...constructorItems.ingredients.map((ing) => ing._id),
+      constructorItems.bun._id
+    ];
+
+    dispatch(createOrderThunk(orderItems));
   };
-  const closeOrderModal = () => {};
+  const closeOrderModal = () => {
+    dispatch(clearOrderModal());
+    dispatch(clearConstructor());
+  };
 
   const price = useMemo(
     () =>
@@ -29,8 +55,6 @@ export const BurgerConstructor: FC = () => {
       ),
     [constructorItems]
   );
-
-  return null;
 
   return (
     <BurgerConstructorUI
