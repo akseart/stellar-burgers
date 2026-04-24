@@ -209,4 +209,12 @@ const config: Config = {
   // watchman: true,
 };
 
+module.exports = {
+  testEnvironment: 'jsdom',
+  moduleNameMapper: {
+    '^@api$': '<rootDir>/src/utils/burger-api',
+    '^@utils-types$': '<rootDir>/src/utils/types',
+  }
+};
+
 export default config;
